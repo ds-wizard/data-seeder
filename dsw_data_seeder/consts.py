@@ -7,8 +7,8 @@ DEFAULT_ENCODING = 'utf-8'
 DEFAULT_MIMETYPE = 'application/octet-stream'
 DEFAULT_PLACEHOLDER = '<<|APP-ID|>>'
 
-CMD_COMPONENT = 'DataSeeder'
-CMD_FUNCTION = 'importDefaultData'
+CMD_COMPONENT = 'data-seeder'
+CMD_CHANNEL = 'data-seeder'
 
 
 class CommandState:
@@ -20,15 +20,18 @@ class CommandState:
 
 class Queries:
 
-    LISTEN = f'LISTEN persistent_command_channel__{CMD_COMPONENT}__{CMD_FUNCTION};'
+    LISTEN = f'LISTEN persistent_command_channel__{CMD_CHANNEL};'
 
     SELECT_CMD = f"""
         SELECT *
-            FROM persistent_command
-            WHERE component = '{CMD_COMPONENT}'
-              AND function = '{CMD_FUNCTION}'
-              AND attempts < max_attempts
-            LIMIT 1 FOR UPDATE SKIP LOCKED;
+        FROM persistent_command
+        WHERE component = '{CMD_COMPONENT}'
+          AND attempts < max_attempts
+          AND state != '{CommandState.DONE}'
+          AND state != '{CommandState.IGNORE}'
+          AND updated_at < (%(now)s - (2 ^ attempts - 1) * INTERVAL '1 min')
+        ORDER BY attempts ASC, updated_at DESC
+        LIMIT 1 FOR UPDATE SKIP LOCKED;
     """
 
     UPDATE_CMD_ERROR = f"""

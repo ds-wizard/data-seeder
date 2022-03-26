@@ -171,7 +171,7 @@ class DataSeeder(CommandWorker):
         ctx = Context.get()
         Context.logger.debug('Trying to fetch a new job')
         cursor = ctx.app.db.conn_query.new_cursor(use_dict=True)
-        cursor.execute(Queries.SELECT_CMD)
+        cursor.execute(Queries.SELECT_CMD, {'now': datetime.datetime.utcnow()})
         result = cursor.fetchall()
         if len(result) != 1:
             Context.logger.debug(f'Fetched {len(result)} jobs')
@@ -187,7 +187,7 @@ class DataSeeder(CommandWorker):
                 query=Queries.UPDATE_CMD_ERROR,
                 attempts=command.get('attempts', 0) + 1,
                 error_message=f'Failed with exception: {str(e)}',
-                updated_at=datetime.datetime.now(),
+                updated_at=datetime.datetime.utcnow(),
                 uuid=command['uuid'],
             )
 
@@ -206,7 +206,7 @@ class DataSeeder(CommandWorker):
         app_ctx.db.execute_query(
             query=Queries.UPDATE_CMD_DONE,
             attempts=cmd.attempts + 1,
-            updated_at=datetime.datetime.now(),
+            updated_at=datetime.datetime.utcnow(),
             uuid=cmd.uuid,
         )
 
