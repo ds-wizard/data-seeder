@@ -1,7 +1,7 @@
 FROM python:3.9-slim-buster
 
 ENV DSW_CONFIG /app/config.yml
-ENV SEEDER_DATA_DIR /app/data
+ENV SEEDER_WORKDIR /app/data
 ENV SEEDER_RECIPE example
 
 WORKDIR /app
