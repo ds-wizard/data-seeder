@@ -118,7 +118,7 @@ class SeedRecipe:
 
     @staticmethod
     def load_from_dir(recipes_dir: pathlib.Path) -> dict[str, 'SeedRecipe']:
-        recipe_files = recipes_dir.glob('seed*.json')
+        recipe_files = recipes_dir.glob('*.seed.json')
         recipes = (SeedRecipe.load_from_json(f) for f in recipe_files)
         return {r.name: r for r in recipes}
 
