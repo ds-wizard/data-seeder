@@ -7,8 +7,8 @@ DEFAULT_ENCODING = 'utf-8'
 DEFAULT_MIMETYPE = 'application/octet-stream'
 DEFAULT_PLACEHOLDER = '<<|APP-ID|>>'
 
-CMD_COMPONENT = 'data-seeder'
-CMD_CHANNEL = 'data-seeder'
+CMD_COMPONENT = 'data_seeder'
+CMD_CHANNEL = 'data_seeder'
 
 
 class CommandState:
