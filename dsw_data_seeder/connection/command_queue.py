@@ -88,7 +88,7 @@ class CommandQueue:
 
                 if w == ([], [], []):
                     Context.logger.debug(f'Nothing received in this cycle '
-                                         f'(timeouted after {timeout} seconds.')
+                                         f'(timeouted after {timeout} seconds).')
                 else:
                     queue_conn.connection.poll()
                     while queue_conn.connection.notifies:

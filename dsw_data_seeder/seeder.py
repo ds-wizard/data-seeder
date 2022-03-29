@@ -67,8 +67,8 @@ class SeedRecipe:
 
     def iterate_db_scripts(self, app_uuid: str):
         return (
-            script.replace(self.db_placeholder, app_uuid)
-            for script in self._db_scripts_data.values()
+            (name, script.replace(self.db_placeholder, app_uuid))
+            for name, script in self._db_scripts_data.items()
         )
 
     def __str__(self):
@@ -182,11 +182,11 @@ class DataSeeder(CommandWorker):
             cmd = PersistentCommand.deserialize(command)
             self._process_command(cmd)
         except Exception as e:
-            Context.logger.warning(f'Errored with exception: {str(e)}')
+            Context.logger.warning(f'Failed: {str(e)}')
             ctx.app.db.execute_query(
                 query=Queries.UPDATE_CMD_ERROR,
                 attempts=command.get('attempts', 0) + 1,
-                error_message=f'Failed with exception: {str(e)}',
+                error_message=f'Failed: {str(e)}',
                 updated_at=datetime.datetime.utcnow(),
                 uuid=command['uuid'],
             )
@@ -228,18 +228,37 @@ class DataSeeder(CommandWorker):
 
     def execute(self, app_uuid: str):
         # Run SQL scripts
-        Context.logger.info('Running SQL scripts')
         app_ctx = Context.get().app
-        app_ctx.db.execute_queries(
-            queries=self.recipe.iterate_db_scripts(app_uuid),
-        )
-        # Transfer S3 objects
-        Context.logger.info('Transferring S3 objects')
-        for local_file, object_name in self.recipe.s3_objects.items():
-            data = local_file.read_bytes()
-            app_ctx.s3.store_object(
-                app_uuid=app_uuid,
-                object_name=object_name,
-                content_type=_guess_mimetype(local_file.name),
-                data=data,
-            )
+        cursor = app_ctx.db.conn_query.new_cursor(use_dict=True)
+        phase = 'DB'
+        try:
+            Context.logger.info('Running SQL scripts')
+            for path, script in self.recipe.iterate_db_scripts(app_uuid):
+                Context.logger.debug(f' -> Executing script: {path.name}')
+                cursor.execute(query=script)
+                Context.logger.debug(f'    OK: {cursor.statusmessage}')
+            phase = 'S3'
+            Context.logger.info('Transferring S3 objects')
+            for local_file, object_name in self.recipe.s3_objects.items():
+                Context.logger.debug(f' -> Reading: {local_file.name}')
+                data = local_file.read_bytes()
+                Context.logger.debug(f' -> Sending: {object_name}')
+                app_ctx.s3.store_object(
+                    app_uuid=app_uuid,
+                    object_name=object_name,
+                    content_type=_guess_mimetype(local_file.name),
+                    data=data,
+                )
+                Context.logger.debug('    OK (stored)')
+        except Exception as e:
+            if Context.get().app.cfg.log.level == 'DEBUG':
+                import traceback
+                print('-'*60)
+                traceback.print_exc()
+                print('-'*60)
+            Context.logger.warn(f'Exception appeared [{type(e).__name__}]: {e}')
+            app_ctx.db.conn_query.connection.rollback()
+            raise RuntimeError(f'{phase}: {e}')
+        finally:
+            Context.logger.info('Data seeding done')
+            cursor.close()

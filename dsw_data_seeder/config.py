@@ -48,7 +48,7 @@ class S3Config:
 class LoggingConfig:
 
     def __init__(self, level: str, global_level: str, message_format: str):
-        self.level = level
+        self.level = level.upper()
         self.global_level = global_level
         self.message_format = message_format
 

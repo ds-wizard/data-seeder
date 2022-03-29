@@ -123,11 +123,10 @@ class PostgresConnection:
         connection.set_isolation_level(self.isolation)
         # test connection
         cursor = connection.cursor()
-        cursor.execute(query='SELECT * FROM document_queue;')
+        cursor.execute(query='SELECT uuid FROM persistent_command;')
         result = cursor.fetchall()
-        Context.logger.debug(f'Jobs in queue: {result}')
+        Context.logger.debug(f'Connection verified [{len(result)}]')
         cursor.close()
-        connection.commit()
         self._connection = connection
         self.listening = False
 
