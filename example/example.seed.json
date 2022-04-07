@@ -1,0 +1,17 @@
+{
+  "name": "example",
+  "description": "Whatever internal information about this data seed set",
+  "db": {
+    "scripts": [
+      "user_seed.sql",
+      "app_config_seed.sql"
+    ],
+    "appIdPlaceholder": "<<|APP-ID|>>"
+  },
+  "s3": {
+    "appDir": "app",
+    "filenameReplace": {
+      ":": "_"
+    }
+  }
+}

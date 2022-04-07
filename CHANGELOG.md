@@ -7,9 +7,13 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+
+## [3.10.0]
+
 ### Added
 
 - Initiated DSW Data Seeder project
 
 
-[Unreleased]: /../../compare/master...develop
+[Unreleased]: /../../compare/main...develop
+[3.10.0]: /../../tree/v3.10.0
