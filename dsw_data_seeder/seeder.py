@@ -99,7 +99,11 @@ class SeedRecipe:
         ]
         db_scripts = list()
         for script in scripts:
-            if script.is_absolute():
+            if '*' in str(script):
+                db_scripts.extend(
+                    sorted([s for s in recipe_file.parent.glob(str(script))])
+                )
+            elif script.is_absolute():
                 db_scripts.append(script)
             else:
                 db_scripts.append(recipe_file.parent / script)
