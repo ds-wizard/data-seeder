@@ -10,6 +10,10 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [3.10.0]
 
+Released for version consistency with other DSW tools.
+
+## [3.10.0]
+
 ### Added
 
 - Initiated DSW Data Seeder project
@@ -17,3 +21,4 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 [Unreleased]: /../../compare/main...develop
 [3.10.0]: /../../tree/v3.10.0
+[3.11.0]: /../../tree/v3.11.0
