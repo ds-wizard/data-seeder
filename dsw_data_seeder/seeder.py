@@ -3,7 +3,6 @@ import datetime
 import json
 import mimetypes
 import pathlib
-import uuid
 
 from typing import Optional
 
@@ -99,7 +98,11 @@ class SeedRecipe:
         ]
         db_scripts = list()
         for script in scripts:
-            if script.is_absolute():
+            if '*' in str(script):
+                db_scripts.extend(
+                    sorted([s for s in recipe_file.parent.glob(str(script))])
+                )
+            elif script.is_absolute():
                 db_scripts.append(script)
             else:
                 db_scripts.append(recipe_file.parent / script)
@@ -167,7 +170,7 @@ class DataSeeder(CommandWorker):
         self.recipe.prepare()
 
     def work(self) -> bool:
-        Context.update_trace_id(str(uuid.uuid4()))
+        Context.update_trace_id('-')
         ctx = Context.get()
         Context.logger.debug('Trying to fetch a new job')
         cursor = ctx.app.db.conn_query.new_cursor(use_dict=True)
@@ -198,6 +201,7 @@ class DataSeeder(CommandWorker):
         return True
 
     def _process_command(self, cmd: PersistentCommand):
+        Context.update_trace_id(cmd.uuid)
         app_ctx = Context.get().app
         app_uuid = cmd.body['appUuid']
         Context.logger.info(f'Seeding recipe "{self.recipe.name}" '
