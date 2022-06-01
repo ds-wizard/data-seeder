@@ -6,7 +6,7 @@ with open('README.md') as f:
 
 setup(
     name='dsw_data_seeder',
-    version='3.11.0',
+    version='3.12.0',
     description='Worker for seeding DSW data',
     long_description=long_description,
     long_description_content_type='text/markdown',
