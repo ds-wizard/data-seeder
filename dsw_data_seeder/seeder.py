@@ -3,6 +3,7 @@ import datetime
 import json
 import mimetypes
 import pathlib
+import uuid
 
 from typing import Optional
 
@@ -27,7 +28,8 @@ class SeedRecipe:
 
     def __init__(self, name: str, description: str, root: pathlib.Path,
                  db_scripts: list[pathlib.Path], db_placeholder: str,
-                 s3_app_dir: Optional[pathlib.Path], s3_fname_replace: dict[str, str]):
+                 s3_app_dir: Optional[pathlib.Path], s3_fname_replace: dict[str, str],
+                 uuids_count: int, uuids_placeholder: Optional[str]):
         self.name = name
         self.description = description
         self.root = root
@@ -38,6 +40,9 @@ class SeedRecipe:
         self._db_scripts_data = collections.OrderedDict()  # type: dict[pathlib.Path, str]
         self.s3_objects = collections.OrderedDict()  # type: dict[pathlib.Path, str]
         self.prepared = False
+        self.uuids_count = uuids_count
+        self.uuids_placeholder = uuids_placeholder
+        self.uuids_replacement = dict()  # type: dict[str, str]
 
     def _load_db_scripts(self):
         for db_script in self.db_scripts:
@@ -57,17 +62,41 @@ class SeedRecipe:
                     target_object_name = target_object_name.replace(r_from, r_to)
                 self.s3_objects[s3_object_path] = target_object_name
 
+    def _prepare_uuids(self):
+        for i in range(self.uuids_count):
+            key = self.uuids_placeholder.replace('[n]', f'[{i}]')
+            self.uuids_replacement[key] = str(uuid.uuid4())
+
     def prepare(self):
         if self.prepared:
             return
         self._load_db_scripts()
         self._load_s3_object_names()
+        self._prepare_uuids()
         self.prepared = True
+
+    def _replace_db_script(self, script: str, app_uuid: str) -> str:
+        result = script.replace(self.db_placeholder, app_uuid)
+        for uuid_key, uuid_value in self.uuids_replacement.items():
+            result = result.replace(uuid_key, uuid_value)
+        return result
 
     def iterate_db_scripts(self, app_uuid: str):
         return (
-            (name, script.replace(self.db_placeholder, app_uuid))
+            (name, self._replace_db_script(script, app_uuid))
             for name, script in self._db_scripts_data.items()
+        )
+
+    def _replace_object_name(self, object_name: str) -> str:
+        result = object_name
+        for uuid_key, uuid_value in self.uuids_replacement.items():
+            result = result.replace(uuid_key, uuid_value)
+        return result
+
+    def iterate_s3_objects(self):
+        return (
+            (local_name, self._replace_object_name(object_name))
+            for local_name, object_name in self.s3_objects.items()
         )
 
     def __str__(self):
@@ -117,6 +146,8 @@ class SeedRecipe:
             db_placeholder=db.get('appIdPlaceholder', DEFAULT_PLACEHOLDER),
             s3_app_dir=s3_app_dir,
             s3_fname_replace=s3.get('filenameReplace', {}),
+            uuids_count=data.get('uuids', {}).get('count', 0),
+            uuids_placeholder=data.get('uuids', {}).get('placeholder', None),
         )
 
     @staticmethod
@@ -135,6 +166,8 @@ class SeedRecipe:
             db_placeholder='<<|APP-ID|>>',
             s3_app_dir=pathlib.Path('/dev/null'),
             s3_fname_replace={},
+            uuids_count=0,
+            uuids_placeholder=None,
         )
 
 
@@ -243,7 +276,7 @@ class DataSeeder(CommandWorker):
                 Context.logger.debug(f'    OK: {cursor.statusmessage}')
             phase = 'S3'
             Context.logger.info('Transferring S3 objects')
-            for local_file, object_name in self.recipe.s3_objects.items():
+            for local_file, object_name in self.recipe.iterate_s3_objects():
                 Context.logger.debug(f' -> Reading: {local_file.name}')
                 data = local_file.read_bytes()
                 Context.logger.debug(f' -> Sending: {object_name}')
