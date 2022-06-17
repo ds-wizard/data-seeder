@@ -8,6 +8,12 @@ to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 
+## [3.12.1]
+
+### Added
+
+- Support for UUID generation (for use in S3 object names and SQL scripts)
+
 ## [3.12.0]
 
 Released for version consistency with other DSW tools.
@@ -27,3 +33,4 @@ Released for version consistency with other DSW tools.
 [3.10.0]: /../../tree/v3.10.0
 [3.11.0]: /../../tree/v3.11.0
 [3.12.0]: /../../tree/v3.12.0
+[3.12.1]: /../../tree/v3.12.1
