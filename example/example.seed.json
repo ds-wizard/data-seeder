@@ -13,5 +13,9 @@
     "filenameReplace": {
       ":": "_"
     }
+  },
+  "uuids": {
+    "count": 3,
+    "placeholder": "{{-UUID[n]-}}"
   }
 }
