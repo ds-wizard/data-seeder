@@ -75,6 +75,9 @@ class SeedRecipe:
         self._prepare_uuids()
         self.prepared = True
 
+    def run_prepare(self):
+        self._prepare_uuids()
+
     def _replace_db_script(self, script: str, app_uuid: str) -> str:
         result = script.replace(self.db_placeholder, app_uuid)
         for uuid_key, uuid_value in self.uuids_replacement.items():
@@ -235,6 +238,7 @@ class DataSeeder(CommandWorker):
 
     def _process_command(self, cmd: PersistentCommand):
         Context.update_trace_id(cmd.uuid)
+        self.recipe.run_prepare()
         app_ctx = Context.get().app
         app_uuid = cmd.body['appUuid']
         Context.logger.info(f'Seeding recipe "{self.recipe.name}" '
