@@ -4,4 +4,4 @@ colorama==0.4.5
 minio==7.1.9
 psycopg2==2.9.3
 tenacity==8.0.1
-urllib3==1.26.9
+urllib3==1.26.10
