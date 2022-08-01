@@ -8,6 +8,8 @@
 
 *Worker for seeding DSW data*
 
+:bangbang: **This project has been moved to monorepo [ds-wizard/engine-tools](https://github.com/ds-wizard/engine-tools)** :bangbang:
+
 ## Usage
 
 -  You can use identical DSW configuration `dsw.yml` file as for DSW server itself (see `config.example.yml`). 
